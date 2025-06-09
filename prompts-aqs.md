@@ -233,6 +233,8 @@ He agregado el proxy en el frontend para que las peticiones `/api` se redirijan 
 Por favor, vuelve a intentar guardar un candidato. Si el error persiste, avísame para revisar la configuración del backend o posibles problemas de CORS.
 
 # Prompt 8: El error anterior fue corregido, ahora aparece el siguiente error en la aplicación: Missing credentials for "PLAIN"
+
+# Respuesta 8:
 El error "Missing credentials for 'PLAIN'" ocurre porque el backend intenta enviar un correo usando nodemailer, pero las variables de entorno MAIL_USER y MAIL_PASS no están definidas o no tienen valores válidos en tu archivo .env. Esto es necesario incluso para pruebas con Ethereal.
 
 Solución:
@@ -243,3 +245,60 @@ Solución:
 > MAIL_PASS=tu_password_ethereal
 3. Guarda el archivo y reinicia el backend (npm run dev en la carpeta backend).
 ¿Quieres que te ayude a generar un usuario de prueba de Ethereal y te indique exactamente cómo agregarlo al .env?
+
+
+# Prompt 9:
+He completado los valores indicados, sin embargo ahora tengo este problema: Invalid login: 535 Authentication failed. Sospecho que debe ser porque la cuenta usada tiene autenticación de 2 pasos. Que puedo hacer para solucionar eso?
+
+# Respuesta 9:
+
+Correcto, el error "Invalid login: 535 Authentication failed" ocurre porque Gmail (y la mayoría de los servicios de correo modernos) no permite autenticación directa con usuario y contraseña si tienes activada la autenticación en dos pasos o si la cuenta no permite "apps menos seguras".
+
+Soluciones recomendadas:
+
+1. Usar Ethereal Email para pruebas
+Ethereal es un servicio gratuito para pruebas de envío de correos, ideal para desarrollo.
+
+Ve a https://ethereal.email/create y genera una cuenta de prueba.
+Copia el usuario y contraseña generados.
+Pon esos valores en tu archivo .env:
+> MAIL_USER=usuario_generado@ethereal.email
+> MAIL_PASS=contraseña_generada
+Reinicia el backend.
+
+2. Si necesitas usar Gmail en producción:
+
+Debes crear una contraseña de aplicación en la configuración de seguridad de tu cuenta de Google (requiere tener 2FA activado).
+Usa esa contraseña de aplicación como MAIL_PASS y tu correo como MAIL_USER.
+Pero para desarrollo, lo más sencillo y seguro es usar Ethereal.
+¿Quieres que te genere automáticamente una cuenta de Ethereal y te indique los valores a usar? - Reinicia el backend.
+
+# Prompt 10: 
+
+He ocupado la solución 1 y funcionó correctamente, o al menos en la ventana indicó que el canditado fue creado, aunque no tengo como verlo si efectivamente se guardó.
+Actualiza la vista del front, para que se reflejen los nuevos canditados que se han agregado.
+
+# Respuesta 10:
+Correcto, el error "Invalid login: 535 Authentication failed" ocurre porque Gmail (y la mayoría de los servicios de correo modernos) no permite autenticación directa con usuario y contraseña si tienes activada la autenticación en dos pasos o si la cuenta no permite "apps menos seguras".
+
+Soluciones recomendadas:
+
+Usar Ethereal Email para pruebas
+Ethereal es un servicio gratuito para pruebas de envío de correos, ideal para desarrollo.
+
+Ve a https://ethereal.email/create y genera una cuenta de prueba.
+Copia el usuario y contraseña generados.
+Pon esos valores en tu archivo .env:
+Reinicia el backend.
+Si necesitas usar Gmail en producción:
+
+Debes crear una contraseña de aplicación en la configuración de seguridad de tu cuenta de Google (requiere tener 2FA activado).
+Usa esa contraseña de aplicación como MAIL_PASS y tu correo como MAIL_USER.
+Pero para desarrollo, lo más sencillo y seguro es usar Ethereal.
+¿Quieres que te genere automáticamente una cuenta de Ethereal y te indique los valores a usar? - Reinicia el backend.
+
+Si necesitas usar Gmail en producción:
+Debes crear una contraseña de aplicación en la configuración de seguridad de tu cuenta de Google (requiere tener 2FA activado).
+Usa esa contraseña de aplicación como MAIL_PASS y tu correo como MAIL_USER.
+Pero para desarrollo, lo más sencillo y seguro es usar Ethereal.
+¿Quieres que te genere automáticamente una cuenta de Ethereal y te indique los valores a usar?

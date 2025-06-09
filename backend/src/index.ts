@@ -100,6 +100,22 @@ app.post('/api/candidatos', upload.single('cv'), async (req: MulterRequest, res:
   }
 });
 
+app.get('/api/candidatos', async (req, res) => {
+  try {
+    const candidatos = await prisma.candidato.findMany({
+      include: {
+        educaciones: true,
+        experiencias: true,
+        documento: { select: { filename: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(candidatos);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
   res.type('text/plain'); 

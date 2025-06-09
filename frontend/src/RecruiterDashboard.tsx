@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const initialForm = {
@@ -17,6 +17,24 @@ const RecruiterDashboard: React.FC = () => {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState<any>({});
   const [successMsg, setSuccessMsg] = useState('');
+  const [candidatos, setCandidatos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCandidatos = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/candidatos');
+      const data = await res.json();
+      setCandidatos(data);
+    } catch {
+      setCandidatos([]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchCandidatos();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -67,6 +85,7 @@ const RecruiterDashboard: React.FC = () => {
           setSuccessMsg('¡Candidato añadido exitosamente!');
           setShowModal(false);
           setForm(initialForm);
+          fetchCandidatos(); // Refresca la lista
         } else {
           setErrors({ api: data.error || 'Error al añadir candidato' });
         }
@@ -86,7 +105,56 @@ const RecruiterDashboard: React.FC = () => {
       </div>
       {successMsg && <div className="alert alert-success">{successMsg}</div>}
       {/* Aquí irá la tabla/listado de candidatos en el futuro */}
-      <div className="alert alert-info">No hay candidatos registrados aún.</div>
+      {loading ? (
+        <div className="alert alert-info">Cargando candidatos...</div>
+      ) : candidatos.length === 0 ? (
+        <div className="alert alert-info">No hay candidatos registrados aún.</div>
+      ) : (
+        <div className="table-responsive">
+          <table className="table table-bordered table-hover mt-3">
+            <thead className="thead-light">
+              <tr>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Dirección</th>
+                <th>Educación</th>
+                <th>Experiencia</th>
+                <th>CV</th>
+              </tr>
+            </thead>
+            <tbody>
+              {candidatos.map((c) => (
+                <tr key={c.id}>
+                  <td>{c.nombre}</td>
+                  <td>{c.apellido}</td>
+                  <td>{c.email}</td>
+                  <td>{c.telefono}</td>
+                  <td>{c.direccion}</td>
+                  <td>
+                    {c.educaciones && c.educaciones.length > 0 && (
+                      <div>
+                        <b>{c.educaciones[0].titulo}</b> - {c.educaciones[0].institucion}<br />
+                        {c.educaciones[0].inicio} a {c.educaciones[0].fin}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    {c.experiencias && c.experiencias.length > 0 && (
+                      <div>
+                        <b>{c.experiencias[0].cargo}</b> - {c.experiencias[0].empresa}<br />
+                        {c.experiencias[0].inicio} a {c.experiencias[0].fin}
+                      </div>
+                    )}
+                  </td>
+                  <td>{c.documento ? c.documento.filename : '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (
