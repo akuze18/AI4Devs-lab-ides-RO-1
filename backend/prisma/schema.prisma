@@ -18,3 +18,54 @@ model User {
   email String  @unique
   name  String?
 }
+
+model Candidato {
+  id           Int                @id @default(autoincrement())
+  nombre       String
+  apellido     String
+  email        String
+  telefono     String
+  direccion    String
+  educaciones  Educacion[]
+  experiencias ExperienciaLaboral[]
+  documento    Documento?
+  createdAt    DateTime           @default(now())
+}
+
+model Educacion {
+  id           Int        @id @default(autoincrement())
+  inicio       String
+  fin          String
+  institucion  String
+  titulo       String
+  candidatoId  Int
+  candidato    Candidato  @relation(fields: [candidatoId], references: [id])
+}
+
+model ExperienciaLaboral {
+  id           Int        @id @default(autoincrement())
+  inicio       String
+  fin          String
+  empresa      String
+  cargo        String
+  area         String?
+  descripcion  String?
+  candidatoId  Int
+  candidato    Candidato  @relation(fields: [candidatoId], references: [id])
+}
+
+model Documento {
+  id           Int        @id @default(autoincrement())
+  filename     String
+  mimetype     String
+  data         Bytes
+  candidatoId  Int        @unique
+  candidato    Candidato  @relation(fields: [candidatoId], references: [id])
+}
+
+model AutocompleteData {
+  id           Int        @id @default(autoincrement())
+  tipo         String     // 'educacion' o 'experiencia'
+  valor        String
+  createdAt    DateTime   @default(now())
+}
