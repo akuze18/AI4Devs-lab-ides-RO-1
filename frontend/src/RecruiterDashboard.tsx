@@ -43,14 +43,36 @@ const RecruiterDashboard: React.FC = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const val = validate();
     setErrors(val);
     if (Object.keys(val).length === 0) {
-      setSuccessMsg('¡Candidato añadido exitosamente! (simulado)');
-      setShowModal(false);
-      setForm(initialForm);
+      const formData = new FormData();
+      formData.append('nombre', form.nombre);
+      formData.append('apellido', form.apellido);
+      formData.append('email', form.email);
+      formData.append('telefono', form.telefono);
+      formData.append('direccion', form.direccion);
+      formData.append('educacion', JSON.stringify(form.educacion));
+      formData.append('experiencia', JSON.stringify(form.experiencia));
+      if (form.cv) formData.append('cv', form.cv);
+      try {
+        const res = await fetch('/api/candidatos', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setSuccessMsg('¡Candidato añadido exitosamente!');
+          setShowModal(false);
+          setForm(initialForm);
+        } else {
+          setErrors({ api: data.error || 'Error al añadir candidato' });
+        }
+      } catch (err: any) {
+        setErrors({ api: err.message || 'Error de red' });
+      }
     }
   };
 
@@ -170,6 +192,7 @@ const RecruiterDashboard: React.FC = () => {
                   <button type="submit" className="btn btn-primary">Guardar</button>
                 </div>
               </form>
+              {errors.api && <div className="alert alert-danger">{errors.api}</div>}
             </div>
           </div>
         </div>
