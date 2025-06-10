@@ -109,6 +109,24 @@ const RecruiterDashboard: React.FC = () => {
     }
   };
 
+  const handleDownloadCV = async (candidatoId: number, filename: string) => {
+    try {
+      const res = await fetch(`/api/candidatos/${candidatoId}/cv`);
+      if (!res.ok) throw new Error('No se pudo descargar el CV');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || 'cv.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('No se pudo descargar el CV.');
+    }
+  };
+
   return (
     <div className="container mt-5">
       <h1 className="mb-4">Dashboard del Reclutador</h1>
@@ -146,9 +164,7 @@ const RecruiterDashboard: React.FC = () => {
                         className="btn btn-outline-secondary btn-sm"
                         title="Descargar CV"
                         disabled={!c.documento}
-                        onClick={() => {
-                          window.open(`/api/candidatos/${c.id}/cv`, '_blank');
-                        }}
+                        onClick={() => handleDownloadCV(c.id, c.documento?.filename)}
                       >
                         <i className="bi bi-download" /> Descargar CV
                       </button>
