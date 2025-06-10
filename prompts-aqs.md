@@ -302,3 +302,120 @@ Debes crear una contraseña de aplicación en la configuración de seguridad de 
 Usa esa contraseña de aplicación como MAIL_PASS y tu correo como MAIL_USER.
 Pero para desarrollo, lo más sencillo y seguro es usar Ethereal.
 ¿Quieres que te genere automáticamente una cuenta de Ethereal y te indique los valores a usar?
+
+# Prompt 11:
+He ocupado la solución 1 y funcionó correctamente, o al menos en la ventana indicó que el canditado fue creado, aunque no tengo como verlo si efectivamente se guardó.
+Actualiza la vista del front, para que se reflejen los nuevos canditados que se han agregado.
+
+# Respuesta 11:
+Voy a actualizar el frontend para que, al cargar el dashboard y tras añadir un candidato, se muestre una lista de los candidatos registrados. Para esto:
+
+Agregaré un endpoint GET /api/candidatos en el backend para obtener la lista de candidatos.
+Modificaré RecruiterDashboard.tsx para mostrar la lista y refrescarla tras agregar un nuevo candidato.
+Primero, implemento el endpoint en el backend.
+
+index.ts
+Checked index.ts, no problems found
+
+RecruiterDashboard.tsx+69-1
+Listo. Ahora el dashboard del reclutador muestra una tabla con los candidatos registrados y se actualiza automáticamente cada vez que se agrega uno nuevo.
+
+Puedes ver los datos principales de cada candidato, incluyendo educación, experiencia y el nombre del archivo de CV. ¿Quieres agregar alguna funcionalidad extra, como descarga de CV o búsqueda?
+
+# Promtp 12:
+Agreguemos la siguientes funcionalidades.
+1. dejar solo algunos campos en la tabla que muestra los candidatos registrados, serían los datos más representativos que corresponden al nombre, apellido, correo electrónico
+2. por cada fila de un canditado, agregar un nuevo campo que se llamara acciones, donde en cada fila se deben agregar botones para ejecutar ciertas acciones asociadas a cada canditado.
+3. agregar un botón en el grupo de acciones a cada fila de un canditado, para descargar el CV registrado.
+4. agregar un botón en el grupo de acciones a cada fila de un canditado, para ver todos los campos registrados de dicho candidato.
+5. agregar un botón en el grupo de acciones a cada fila de un canditado, para modificar todos los campos registrados de dicho candidato, ocupando la misma presentación que al momento de crear un nuevo candidato.
+Implementa cada nueva funcionalidad una a una para ir revisandola.
+
+# Respuesta 12:
+Perfecto, comenzaré con la primera funcionalidad:
+
+1. Dejar solo los campos nombre, apellido y correo electrónico en la tabla de candidatos.
+
+Voy a actualizar la tabla en RecruiterDashboard.tsx para mostrar únicamente esos tres campos representativos.
+
+RecruiterDashboard.tsx+0-24
+La tabla ahora muestra solo los campos nombre, apellido y correo electrónico de cada candidato.
+
+¿Quieres que continúe con la siguiente funcionalidad (agregar columna de acciones con botones por fila)?
+
+# Prompt 13: continua la siguiente funcionalidad
+
+# Respuesta 13: 
+Ahora implemento la segunda funcionalidad:
+
+2. Por cada fila de un candidato, agregar un nuevo campo llamado "Acciones", donde se agregarán botones para ejecutar acciones asociadas a cada candidato.
+
+Voy a agregar la columna "Acciones" y un grupo de botones (vacíos por ahora) en cada fila de la tabla.
+
+RecruiterDashboard.tsx+6-0
+Listo. Ahora la tabla de candidatos incluye una columna "Acciones" con un grupo de botones (aún vacíos) en cada fila, lista para agregar las acciones siguientes.
+
+¿Avanzo con el botón para descargar el CV registrado?
+
+# Prompt 14: continua la siguiente funcionalidad
+
+# Respuesta 14:
+Ahora implemento la siguiente funcionalidad:
+
+3. Agregar un botón en el grupo de acciones a cada fila de un candidato, para descargar el CV registrado.
+
+Para esto, necesito:
+
+Un endpoint en el backend para descargar el archivo CV de un candidato por su ID.
+Un botón en el frontend que llame a ese endpoint y descargue el archivo.
+Primero, agrego el endpoint en el backend.
+
+index.ts
+Checked index.ts, no problems found
+
+RecruiterDashboard.tsx+11-1
+Listo. Ahora cada fila de candidato tiene un botón "Descargar CV" en la columna de acciones, que descarga el archivo registrado desde el backend.
+
+¿Quieres que continúe con el botón para ver todos los campos registrados de un candidato?
+
+# Prompt 15: continua la siguiente funcionalidad
+
+# Respuesta 15:
+Ahora implemento la siguiente funcionalidad:
+
+4. Agregar un botón en el grupo de acciones a cada fila de un candidato, para ver todos los campos registrados de dicho candidato.
+
+Voy a agregar un botón "Ver detalles" que abrirá un modal mostrando todos los datos del candidato seleccionado.
+
+Procedo a editar el frontend para esta funcionalidad.
+
+RecruiterDashboard.tsx+61-0
+Listo. Ahora cada fila tiene un botón "Ver detalles" que abre un modal mostrando todos los campos registrados del candidato seleccionado.
+
+¿Quieres que continúe con la funcionalidad para modificar los datos del candidato usando el mismo formulario de alta?
+
+# Prompt 16: continua la siguiente funcionalidad
+
+# Respuesta 16:
+
+Ahora implemento la última funcionalidad solicitada:
+
+5. Agregar un botón en el grupo de acciones a cada fila de un candidato, para modificar todos los campos registrados de dicho candidato, ocupando la misma presentación que al momento de crear un nuevo candidato.
+
+Esto implica:
+
+Agregar un botón "Editar" en la columna de acciones.
+Al hacer clic, abrir el mismo formulario de alta, precargado con los datos del candidato.
+Al guardar, enviar los cambios al backend (requiere endpoint PUT o PATCH).
+Primero, implemento la lógica en el frontend para abrir el formulario en modo edición y precargar los datos. El endpoint backend lo agrego después de validar la UI.
+
+Procedo a editar el frontend.
+
+RecruiterDashboard.tsx+45-8
+Listo. Ahora cada fila tiene un botón "Editar" que abre el formulario precargado con los datos del candidato. Al guardar, intenta hacer un PUT al endpoint /api/candidatos/:id (aún falta implementarlo en el backend).
+
+¿Quieres que continúe y cree el endpoint backend para actualizar los datos del candidato?
+
+# Prompt 17: crea el endpoint para actualizar el candidato y continua.
+
+# Respuesta 17:

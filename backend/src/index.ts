@@ -90,7 +90,7 @@ app.post('/api/candidatos', upload.single('cv'), async (req: MulterRequest, res:
     });
     await transporter.sendMail({
       from: 'no-reply@lti-dev.com',
-      to: process.env.NODE_ENV === 'production' ? email : 'correo_pruebas@lti-dev.com',
+      to: process.env.NODE_ENV === 'production' ? email : 'arielquispesepulveda@gmail.com',
       subject: 'Postulación recibida',
       text: `Hola ${nombre}, tu postulación ha sido recibida exitosamente.`,
     });
@@ -113,6 +113,77 @@ app.get('/api/candidatos', async (req, res) => {
     res.json(candidatos);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/candidatos/:id/cv', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const doc = await prisma.documento.findUnique({
+      where: { candidatoId: id },
+    });
+    if (!doc) return res.status(404).send('CV no encontrado');
+    res.setHeader('Content-Disposition', `attachment; filename="${doc.filename}"`);
+    res.setHeader('Content-Type', doc.mimetype);
+    res.send(doc.data);
+  } catch (err: any) {
+    res.status(500).send('Error al descargar el CV');
+  }
+});
+
+app.put('/api/candidatos/:id', upload.single('cv'), async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { nombre, apellido, email, telefono, direccion, educacion, experiencia } = req.body;
+    if (!nombre || !apellido || !email || !telefono || !direccion) {
+      return res.status(400).json({ error: 'Campos obligatorios faltantes' });
+    }
+    // Validar educación y experiencia
+    const educ = JSON.parse(educacion);
+    const exp = JSON.parse(experiencia);
+    if (!educ[0].inicio || !educ[0].fin || !educ[0].institucion || !educ[0].titulo) {
+      return res.status(400).json({ error: 'Datos de educación incompletos' });
+    }
+    if (!exp[0].inicio || !exp[0].fin || !exp[0].empresa || !exp[0].cargo) {
+      return res.status(400).json({ error: 'Datos de experiencia incompletos' });
+    }
+    // Actualizar candidato
+    await prisma.candidato.update({
+      where: { id },
+      data: {
+        nombre, apellido, email, telefono, direccion,
+      },
+    });
+    // Actualizar educación (asume 1 registro)
+    await prisma.educacion.updateMany({
+      where: { candidatoId: id },
+      data: educ[0],
+    });
+    // Actualizar experiencia (asume 1 registro)
+    await prisma.experienciaLaboral.updateMany({
+      where: { candidatoId: id },
+      data: exp[0],
+    });
+    // Si hay nuevo CV, actualizarlo
+    if (req.file) {
+      await prisma.documento.upsert({
+        where: { candidatoId: id },
+        update: {
+          filename: req.file.originalname,
+          mimetype: req.file.mimetype,
+          data: req.file.buffer,
+        },
+        create: {
+          candidatoId: id,
+          filename: req.file.originalname,
+          mimetype: req.file.mimetype,
+          data: req.file.buffer,
+        },
+      });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al actualizar candidato' });
   }
 });
 

@@ -19,6 +19,10 @@ const RecruiterDashboard: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState('');
   const [candidatos, setCandidatos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCandidato, setSelectedCandidato] = useState<any | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editCandidatoId, setEditCandidatoId] = useState<number | null>(null);
 
   const fetchCandidatos = async () => {
     setLoading(true);
@@ -76,18 +80,28 @@ const RecruiterDashboard: React.FC = () => {
       formData.append('experiencia', JSON.stringify(form.experiencia));
       if (form.cv) formData.append('cv', form.cv);
       try {
-        const res = await fetch('/api/candidatos', {
-          method: 'POST',
-          body: formData,
-        });
-        const data = await res.json();
+        let res, data;
+        if (editMode && editCandidatoId) {
+          res = await fetch(`/api/candidatos/${editCandidatoId}`, {
+            method: 'PUT',
+            body: formData,
+          });
+        } else {
+          res = await fetch('/api/candidatos', {
+            method: 'POST',
+            body: formData,
+          });
+        }
+        data = await res.json();
         if (res.ok && data.success) {
-          setSuccessMsg('¡Candidato añadido exitosamente!');
+          setSuccessMsg(editMode ? '¡Candidato actualizado!' : '¡Candidato añadido exitosamente!');
           setShowModal(false);
           setForm(initialForm);
-          fetchCandidatos(); // Refresca la lista
+          setEditMode(false);
+          setEditCandidatoId(null);
+          fetchCandidatos();
         } else {
-          setErrors({ api: data.error || 'Error al añadir candidato' });
+          setErrors({ api: data.error || 'Error al guardar candidato' });
         }
       } catch (err: any) {
         setErrors({ api: err.message || 'Error de red' });
@@ -117,11 +131,7 @@ const RecruiterDashboard: React.FC = () => {
                 <th>Nombre</th>
                 <th>Apellido</th>
                 <th>Email</th>
-                <th>Teléfono</th>
-                <th>Dirección</th>
-                <th>Educación</th>
-                <th>Experiencia</th>
-                <th>CV</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -130,25 +140,51 @@ const RecruiterDashboard: React.FC = () => {
                   <td>{c.nombre}</td>
                   <td>{c.apellido}</td>
                   <td>{c.email}</td>
-                  <td>{c.telefono}</td>
-                  <td>{c.direccion}</td>
                   <td>
-                    {c.educaciones && c.educaciones.length > 0 && (
-                      <div>
-                        <b>{c.educaciones[0].titulo}</b> - {c.educaciones[0].institucion}<br />
-                        {c.educaciones[0].inicio} a {c.educaciones[0].fin}
-                      </div>
-                    )}
+                    <div className="btn-group" role="group">
+                      <button
+                        className="btn btn-outline-secondary btn-sm"
+                        title="Descargar CV"
+                        disabled={!c.documento}
+                        onClick={() => {
+                          window.open(`/api/candidatos/${c.id}/cv`, '_blank');
+                        }}
+                      >
+                        <i className="bi bi-download" /> Descargar CV
+                      </button>
+                      <button
+                        className="btn btn-outline-info btn-sm"
+                        title="Ver detalles"
+                        onClick={() => {
+                          setSelectedCandidato(c);
+                          setShowDetailModal(true);
+                        }}
+                      >
+                        <i className="bi bi-eye" /> Ver detalles
+                      </button>
+                      <button
+                        className="btn btn-outline-warning btn-sm"
+                        title="Editar"
+                        onClick={() => {
+                          setEditMode(true);
+                          setEditCandidatoId(c.id);
+                          setForm({
+                            nombre: c.nombre,
+                            apellido: c.apellido,
+                            email: c.email,
+                            telefono: c.telefono,
+                            direccion: c.direccion,
+                            educacion: c.educaciones ? [{ ...c.educaciones[0] }] : initialForm.educacion,
+                            experiencia: c.experiencias ? [{ ...c.experiencias[0] }] : initialForm.experiencia,
+                            cv: null,
+                          });
+                          setShowModal(true);
+                        }}
+                      >
+                        <i className="bi bi-pencil-square" /> Editar
+                      </button>
+                    </div>
                   </td>
-                  <td>
-                    {c.experiencias && c.experiencias.length > 0 && (
-                      <div>
-                        <b>{c.experiencias[0].cargo}</b> - {c.experiencias[0].empresa}<br />
-                        {c.experiencias[0].inicio} a {c.experiencias[0].fin}
-                      </div>
-                    )}
-                  </td>
-                  <td>{c.documento ? c.documento.filename : '-'}</td>
                 </tr>
               ))}
             </tbody>
@@ -256,11 +292,65 @@ const RecruiterDashboard: React.FC = () => {
                   </div>
                 </div>
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancelar</button>
-                  <button type="submit" className="btn btn-primary">Guardar</button>
+                  <button type="button" className="btn btn-secondary" onClick={() => {
+                    setShowModal(false);
+                    setEditMode(false);
+                    setEditCandidatoId(null);
+                    setForm(initialForm);
+                  }}>Cancelar</button>
+                  <button type="submit" className="btn btn-primary">{editMode ? 'Actualizar' : 'Guardar'}</button>
                 </div>
               </form>
               {errors.api && <div className="alert alert-danger">{errors.api}</div>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de detalles */}
+      {showDetailModal && selectedCandidato && (
+        <div className="modal show fade d-block" tabIndex={-1} role="dialog" style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-lg" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Detalles del Candidato</h5>
+                <button type="button" className="close" onClick={() => setShowDetailModal(false)}>
+                  <span>&times;</span>
+                </button>
+              </div>
+              <div className="modal-body">
+                <p><b>Nombre:</b> {selectedCandidato.nombre}</p>
+                <p><b>Apellido:</b> {selectedCandidato.apellido}</p>
+                <p><b>Email:</b> {selectedCandidato.email}</p>
+                <p><b>Teléfono:</b> {selectedCandidato.telefono}</p>
+                <p><b>Dirección:</b> {selectedCandidato.direccion}</p>
+                <hr />
+                <h6>Educación</h6>
+                {selectedCandidato.educaciones && selectedCandidato.educaciones.length > 0 && (
+                  <ul>
+                    <li>
+                      <b>{selectedCandidato.educaciones[0].titulo}</b> - {selectedCandidato.educaciones[0].institucion}<br />
+                      {selectedCandidato.educaciones[0].inicio} a {selectedCandidato.educaciones[0].fin}
+                    </li>
+                  </ul>
+                )}
+                <h6>Experiencia Laboral</h6>
+                {selectedCandidato.experiencias && selectedCandidato.experiencias.length > 0 && (
+                  <ul>
+                    <li>
+                      <b>{selectedCandidato.experiencias[0].cargo}</b> - {selectedCandidato.experiencias[0].empresa}<br />
+                      {selectedCandidato.experiencias[0].inicio} a {selectedCandidato.experiencias[0].fin}<br />
+                      Área: {selectedCandidato.experiencias[0].area}<br />
+                      Descripción: {selectedCandidato.experiencias[0].descripcion}
+                    </li>
+                  </ul>
+                )}
+                <hr />
+                <p><b>CV:</b> {selectedCandidato.documento ? selectedCandidato.documento.filename : '-'}</p>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>Cerrar</button>
+              </div>
             </div>
           </div>
         </div>
